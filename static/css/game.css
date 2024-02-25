@@ -1,0 +1,25 @@
+body {
+    margin: 0;
+    padding: 0;
+}
+
+.mainContent {
+    display: flex;
+    flex-direction: column;
+    margin: 0px;
+    padding: 0px;
+}
+
+.topShelf {
+    position: absolute;
+    width: 100%;
+    top: 0;
+    background-color: burlywood;
+}
+
+.bottomShelf {
+    position: absolute;
+    width: 100%;
+    min-height: 50%;
+    bottom: 0;
+}
