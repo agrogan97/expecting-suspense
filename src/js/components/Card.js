@@ -1,34 +1,8 @@
 class Card {
     constructor(x, y, id, value=""){
-        this.cardContainer = new PIXI.Container();
-
-        this.card = PIXI.Sprite.from('/static/imgs/card.png')
-        this.card.anchor.set(0.5)
-        this.cardContainer.x = x
-        this.cardContainer.y = y;
-        this.id = id
-        // this.card.x = x;
-        // this.card.y = y;
-        this.card.scale.set(0.05)
-        this.cardContainer.addChild(this.card);
-        // this.value = _.sample(_.range(-3, 9)).toString()
-        this.value = value
-
-        // Add card value label
-        const style = new PIXI.TextStyle({
-            fontFamily: 'Arial',
-            fontSize: 34,
-            fontStyle: 'italic',
-            fontWeight: 'bold',
-        })
-
-        this.textLabel = new PIXI.Text(this.value, style)
-        this.textLabel.anchor.set(0.5)
-        this.textLabel.x = 0
-        this.textLabel.y = 0 
-        this.cardContainer.addChild(this.textLabel)
-
-        deckContainer.addChild(this.cardContainer)
+        this.position = createVector(x, y)
+        this.id = id;
+        this.value = value;
     }
 
     setValue(value){
@@ -36,20 +10,16 @@ class Card {
         this.textLabel.text = this.value;
     }
 
-    moveTo(coords){
-        // Get vector between points
-        let xDiff = this.cardContainer.x - coords.x
-        let yDiff = this.cardContainer.y - coords.y
-        app.ticker.add(() => {
-            // this.cardContainer.rotation += 0.01;
-            if ((_.inRange(this.cardContainer.x, coords.x*0.999, coords.x*1.001)) && (_.inRange(this.cardContainer.y, coords.y*0.999, coords.y*1.001))){
-                {}
-            } else {
-                // TODO this bit isn't right, actually work out how to do it
-                this.cardContainer.x -= xDiff*0.01;
-                this.cardContainer.y -= yDiff*0.01;
-            }
-        })
+    hideNumber(){
+
+    }
+
+    draw(){
+        let pos = this.position;
+        push();
+        translate(pos.x, pos.y)
+        image(assets.imgs.card, 0, 0)
+        pop();
     }
 }
 
@@ -115,11 +85,16 @@ class Deck {
             // console.log(cardCoords[ix], cardCoordsShuffled[ix])
         })
 
-
         // For each card in the deck, move it to the coordinates of the card with the same index
-        this.cards.forEach((card, ix) => {
-            card.moveTo(cardCoordsShuffled[ix])
-        })
-        
+        if (animate) {
+            this.cards.forEach((card, ix) => {
+                card.moveTo(cardCoordsShuffled[ix])
+            })
+        }
+    }
+
+    draw() {
+        this.cards.forEach((card) => {card.draw()})
+        // this.drawCards.forEach((card) => {card.draw()})
     }
 }

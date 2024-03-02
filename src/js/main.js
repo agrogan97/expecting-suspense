@@ -1,15 +1,24 @@
-let sprite = PIXI.Sprite.from('https://pixijs.com/assets/bunny.png')
-app.stage.addChild(sprite);
+var canvas;
+var deck;
+var assets = {'imgs' : {}};
 
-const deckContainer = new PIXI.Container();
-app.stage.addChild(deckContainer)
+function preload(){
+    assets.imgs['card'] = loadImage('/static/imgs/card.png')
+}
 
-let deck = new Deck(2*window.innerWidth/3, 100, 8)
-// deckContainer.addChild(deck)
+function setup(){
+    canvas = createCanvas(window.innerWidth, window.innerHeight/2);
+    canvas.parent("gameCanvas")
+    rectMode(CENTER);
+    imageMode(CENTER);
+    deck = new Deck(2*window.innerWidth/3, 100, 8)
 
-// const basicText = new PIXI.Text('Test text')
-// basicText.x = 50
-// basicText.y = 50
-// app.stage.addChild(basicText)
+}
 
-// const card2 = new Card(150, 150, 'test', 7)
+function draw(){
+    deck.draw();
+}
+
+function mousePressed(){
+
+}
