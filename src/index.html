@@ -1,14 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Suspense</title>
-</head>
-<body>
-    
-</body>
-<script src="js/lib/p5/p5.js"></script>
-<script src="js/main.js"></script>
+    <head>
+        <title>MyTestProject</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <!-- Lib files -->
+        <script src="lib/chartjs/Chart.js"></script>
+        <script src="lib/lodash/lodash.js"></script>
+        <script src="lib/p5/p5.js"></script>
+        <script src="lib/psychex/psychex.js"></script>
+        <script src="js/components/Deck.js"></script>
+        <script src="js/components/Wheel.js"></script>
+        <script src="js/components/MyGame.js"></script>
+        <script src="js/main.js"></script>
+        <!-- Stylesheets -->
+        <link rel="stylesheet" href="css/style.css">
+    </head>
+
+    <body style="overflow-x: hidden; overflow-y: hidden;">
+        <div class="mainContent">
+            <div class="topShelf">
+                <div class="chartDiv">
+                    <canvas id="myChart"></canvas>
+                </div>
+
+            </div>
+            <div class="bottomShelf">
+                <div id="gameCanvas" class="gameCanvas">
+
+                </div>
+
+            </div>
+        </div>
+    </body>
+    <!-- Use Chart.js for the chart -->
+    <script src="js/components/Chart.js"></script>
 </html>
