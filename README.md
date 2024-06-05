@@ -1,5 +1,7 @@
 # Suspense, and the Expectation of Future Learning
 
+*"Expected surprise determines suspense"*
+
 Replication of work by Li, Bramley, & Gureckis (2021). This repo contains both the modelling code and the web app that replicates the study.
 
 The game has been created using *Psychex*.
@@ -46,6 +48,9 @@ The game-type can be specified with the URL param `mode`. There are 2 options:
 - ?mode=1 : the high-suspense mode, sampled from the top 5% of suspense scores
 
 Thus the game can be opened through a browser, by navigating to `http://127.0.0.1:8000/?mode=X`, replacing `X` with either `0` or `1`.
+
+The game can also be served using [JATOS](https://www.jatos.org/). An importable `jzip` is included in this repo, called `expecting-suspense.jzip`. To manually add the code to your JATOS installation, simply import JATOS in `index.html`, or follow the instructions
+on the JATOS getting started page.
 
 # References
 
