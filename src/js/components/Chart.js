@@ -9,7 +9,8 @@ const data = {
             borderColor: 'blue',
             fill: true,
             cubicInterpolationMode: 'monotone',
-            tension: 0.4,
+            stepped: 'middle',
+            tension: 0.1,
             min: 0,
             max: 30,
             yAxisID: "y"
@@ -20,7 +21,8 @@ const data = {
             borderColor: 'blue',
             fill: true,
             cubicInterpolationMode: 'monotone',
-            tension: 0.4,
+            stepped: 'middle',
+            tension: 0.1,
             min: 0,
             max: 30,
             yAxisID: "yright"
@@ -84,6 +86,9 @@ var scoreChart = new Chart(ctx, {
                     }
                 }
             },
+            legend: {
+                display: false
+            }
         },
         interaction: {
             intersect: false
@@ -171,5 +176,12 @@ function addChartData(val, label){
     scoreChart.data.datasets[0].data.push(val);
     scoreChart.data.datasets[1].data.push(val);
     scoreChart.data.labels.push(label);
+    scoreChart.update();
+}
+
+function resetChart(){
+    scoreChart.data.datasets[0].data = [0];
+    scoreChart.data.datasets[1].data = [0];
+    scoreChart.data.labels = [0];
     scoreChart.update();
 }

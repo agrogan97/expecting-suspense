@@ -7,9 +7,24 @@ class Wheel extends Primitive {
         this.initialRotation = 0;
         this.isSpinning = false;
         this.ticker = 0;
-        this.img = new pImage(x, y, assets.imgs.wheel).setScale(2);
-        let mod = 2.5; // using pixels
-        let triangleBase = createVector(this.pos.x, this.pos.y-this.img.dims.y*1.3);
+        // this.scale = 1.75;
+        if (window.innerWidth <= 1100){
+            // ipad-type size
+            this.scale = 1.25;
+        } else if (_.inRange(window.innerWidth, 1100, 1500)){
+            this.scale = 1.45;
+        } else if (_.inRange(window.innerWidth, 1500, 2000)){
+            this.scale = 1.75;
+        } else {
+            this.scale = 2;
+        }
+        this.img = new pImage(x, y, assets.imgs.wheel).setScale(this.scale)
+        // this.wheelDims = createVector(assets.imgs.wheel.width*1.75, assets.imgs.wheel.height*1.75);
+        // this.wheelDims = Primitive.toPercentage(this.wheelDims);
+        this.wheelDims = this.img.dims;
+        // let triangleBase = createVector(this.pos.x, this.pos.y - this.wheelDims.y*0.7);
+        let triangleBase = createVector(50, 10)
+        
         // this.arrow = new pTriangle(triangleBase.x, triangleBase.y, triangleBase.x + 2*mod, triangleBase.y, triangleBase.x+mod, triangleBase.y-mod, {backgroundColor: 'black'});
 
         this.arrow = new pTriangle(triangleBase.x-3, triangleBase.y, triangleBase.x+3, triangleBase.y, triangleBase.x, triangleBase.y-9);
@@ -23,6 +38,7 @@ class Wheel extends Primitive {
         // Set the key index of the key to be pressed to spin the wheel
         // See https://www.toptal.com/developers/keycode for keycodes
         this.key = 32; // space bar
+        
     }
 
 
@@ -137,7 +153,7 @@ class Wheel extends Primitive {
     }
 
     draw(){
-
+        // angleMode(DEGREES)
         if (this.spinningAllowed){
             if (keyIsDown(this.key)){
                 this.spin()
@@ -145,7 +161,7 @@ class Wheel extends Primitive {
         }
         this.isHeld = keyIsDown(this.key);
 
-        super.draw();
+        // super.draw();
         if (this.isSpinning){
             this.spinControl(this.isHeld)
         }
