@@ -11,16 +11,31 @@ class Card extends Primitive {
         this.show = true;
         this.shuffleCoords = {x: [], y: []};
         this.originalPos = createVector(x, y);
-        // NB: must give x and y, not this.position.x and this.position.y - as positionMode = "PERCENTAGE"
-        this.img = new pImage(x, y, assets.imgs.card, kwargs).setScale(0.5);
-        this.centerPoint = this.img.centerPoint;
-        // this.label = new pText(this.value, this.pos.x + this.img.width/4, this.pos.y + this.img.height/4, {fontSize: 36, textAlign:"CENTER", positionMode: "PIXELS", ...kwargs});
-        this.label = new pText(this.value, this.centerPoint.x, this.centerPoint.y);
+        if (window.innerWidth <= 1100){
+            // ipad-type size
+            this.scale = 0.35;
+        } else if (_.inRange(window.innerWidth, 1100, 1500)){
+            this.scale = 0.4;
+        } else if (_.inRange(window.innerWidth, 1500, 2000)){
+            this.scale = 0.45;
+        } else if (_.inRange(window.innerWidth, 2000, 2300)) {
+            this.scale = 0.5;
+        } else {
+            this.scaler = 0.55;
+        }
+        this.scaleFactor = 0.45;
+        this.img = new pImage(x, y, assets.imgs.card, {...kwargs, imageMode: "CORNER"}).setScale(this.scaleFactor);
+        // Store the scaled dims
+        // this.dims = createVector(this.img.dims.x*this.scaleFactor, this.img.dims.y*this.scaleFactor);
+        this.dims = this.img.dims;
+        this.xOffset = 0;
+        this.yOffset = 0;
+        this.label = new pText(this.value, this.pos.x + this.dims.x/2 - this.xOffset, this.pos.y + this.dims.y/2 + this.yOffset);
     }
 
     setValue(value){
         this.value = value;
-        this.label.text = value;
+        // this.label.text = value;
     }
 
     lerper(a, b, N, insertNoise=false){
@@ -46,8 +61,12 @@ class Card extends Primitive {
     }
 
     hide(){
-        // `flip` the card to hide the value - but not remove the value var
+        // `flip` the card to hide the value - but not remove the value variable
         this.label.text = "";
+    }
+
+    reveal(){
+        this.label.text = this.value;
     }
 
     toggleDisplay(){
@@ -60,7 +79,8 @@ class Card extends Primitive {
         if (this.doShuffle){
             if (this.shuffleIx >= this.shuffleCoords.x.length) {
                 this.doShuffle = false
-                this.pos = createVector(_.round(_.last(this.shuffleCoords.x)), _.round(_.last(this.shuffleCoords.y)))
+            
+                this.pos = createVector(_.last(this.shuffleCoords.x), _.last(this.shuffleCoords.y))
                 this.ticker = 0;
             } else {
                 if (this.ticker%1 == 0){
@@ -72,8 +92,7 @@ class Card extends Primitive {
         }
         // Update the positions of the card img and the label - including rerunning getCenter()
         this.img.pos = this.pos;
-        this.img.getCenter();
-        this.label.pos = this.img.centerPoint;
+        this.label.pos = createVector(this.pos.x + this.dims.x/2 - this.xOffset, this.pos.y + this.dims.y/2 + this.yOffset)
 
         this.img.draw();
         this.label.draw();
@@ -90,11 +109,12 @@ class Deck extends Primitive {
         this.xOffset = offset.x*0.65;
         this.yOffset = offset.y*0.55;
         this.animationLength = 1.5;
-        console.log(`Using ${this.nCards}-card deck`);
 
         // Set 3 in a column and then place leftovers in bottom row
         this.nCols = 3;
         this.nRows = Math.ceil(this.nCards/this.nCols);
+
+        this.cardImgDims = new Card(0, 0, -1, -1000, {}).dims;
 
         // place cards
         this.cards= [];
@@ -104,30 +124,38 @@ class Deck extends Primitive {
                 if (rowIx*this.nRows + colIx < this.nCards) {
                     this.cards.push(
                         new Card(
-                            this.pos.x + this.xOffset*colIx, // x-pos
+                            this.pos.x + 3.7*1.5*colIx, // x-pos
                             this.pos.y + this.yOffset*rowIx, // y-pos
                             rowIx*this.nRows + colIx, // id
                             // rowIx*this.nRows + colIx, // value
-                            this.cardVals[rowIx*this.nRows + colIx],
-                            {imageMode: "CORNER", textAlign: "LEFT"}
+                            this.cardVals[rowIx*this.nRows + colIx]
                         )
                     )
+                    // After loading the card, get the scaled dimensions and update position offsetting accordingly
+                    // This lets the card sizes better adapt to different screen sizes
+                    // let dims = _.last(this.cards).dims;
+                    // _.last(this.cards).pos = createVector(this.pos.x + dims.x*colIx*1.2, this.pos.y + dims.y*rowIx*1.2);
+                    _.last(this.cards)
                 }
             })
         });
 
+        let singleCardDims = this.cards[0].dims;
+
         // Create 2 placeholder cards that represent 'drawn' cards
         this.drawnCards = [
-            new Card(this.pos.x - this.xOffset, this.pos.y + 0.5*this.yOffset, 'drawn1'),
-            new Card(this.pos.x - this.xOffset, this.pos.y + 1.5*this.yOffset, 'drawn2')
+            new Card(this.pos.x + 4*singleCardDims.x*1.1, this.pos.y + 0.35*singleCardDims.y, 'drawn1'),
+            new Card(this.pos.x + 4*singleCardDims.x*1.1, this.pos.y + 1.75*singleCardDims.y, 'drawn2')
         ]
         this.drawnCards[0].img.img = assets.imgs.card_blue;
         this.drawnCards.forEach(card => {card.toggleDisplay()})
+        this.hideAll();
     }
 
     setCardVals(cardVals){
-        this.cards.forEach((val, ix) => {this.cards[ix].setValue(val)})
-        this.cards.forEach(card => {card.setValue(cardVals)});
+        this.cardVals = cardVals;
+        cardVals.forEach((val, ix) => {this.cards[ix].setValue(val)})
+        // this.cards.forEach(card => {card.setValue(cardVals)});
     }
 
     drawCards(cardPair){
@@ -141,6 +169,7 @@ class Deck extends Primitive {
         pair.forEach((card, ix) => {
             this.drawnCards[ix].setValue(card);
             this.drawnCards[ix].toggleDisplay();
+            // this.drawncards[ix].reveal();
         })
         // TODO and hide the first 2 in the deck to make it seem like they've been drawn
         this.cards[0].toggleDisplay();
@@ -166,6 +195,7 @@ class Deck extends Primitive {
         return new Promise((resolve, reject) => {
             // hide all cards before shuffling
         this.drawnCards.forEach(card => {if (card.show){card.toggleDisplay()}});
+        this.drawnCards.forEach(card => {card.reveal()});
         let loops = 1;
         // Queue shuffle animations by setting an interval at the animation length
         let intv = setInterval(() => {
@@ -179,6 +209,7 @@ class Deck extends Primitive {
                     }
                     // Draw 2 cards from the deck
                     this.drawFromDeck(pair);
+                    this.drawnCards.forEach(card => {card.reveal()});
                     resolve();
                 }, 1000); // this waits 1 second before drawing from the deck
             }
@@ -188,14 +219,12 @@ class Deck extends Primitive {
     }
 
     reset(){
-        // Make all cards visible in the original grid and remove the drawn cards
-        this.drawnCards.forEach(card => card.toggleDisplay())
+        this.drawnCards.forEach(card => card.show = false)
+
         this.cards.forEach((card, ix) => {
             card.show = true;
-            this.cards.forEach(card => {card.moveTo(card.originalPos)});
             card.setValue(this.cardVals[ix]);
         });
-
     }
 
     test(){
@@ -204,9 +233,20 @@ class Deck extends Primitive {
             this.reset();
         }, 5000)
     }
+    
+    hideAll(){
+        this.cards.forEach(card => {
+            card.hide()
+        })
+    }
 
-    draw(update={}){
-        super.draw(update)
+    revealAll(){
+        this.cards.forEach(card => {
+            card.reveal()
+        })
+    }
+
+    draw(){
         push();
         this.cards.forEach((card) => {card.draw()})
         this.drawnCards.forEach((card) => {card.draw()})
