@@ -40,10 +40,10 @@ const test_bg_area = {
         } = chart;
 
         ctx.fillStyle = 'rgba(255, 0, 0, 0.54)'; // red
-        ctx.fillRect(left+1, y.getPixelForValue(21), width-0.5, top - y.getPixelForValue(21)) // left, top, width, height
+        ctx.fillRect(left+1, y.getPixelForValue(10), width-0.5, top - y.getPixelForValue(10)) // left, top, width, height
 
         ctx.fillStyle = 'rgba(0, 31, 142, 0.47)'; // blue
-        ctx.fillRect(left, top - (top - y.getPixelForValue(21)), width, y.getPixelForValue(y.min) - y.getPixelForValue(21)) // left, top, width, height
+        ctx.fillRect(left, top - (top - y.getPixelForValue(10)), width, y.getPixelForValue(y.min) - y.getPixelForValue(10)) // left, top, width, height
     }
 }
 
@@ -82,7 +82,7 @@ var scoreChart = new Chart(ctx, {
                         return "Player Score"
                     },
                     footer: (tooltipContext) => {
-                        return (tooltipContext[0].parsed.y > 21 ? "Bust!" : "")
+                        return (tooltipContext[0].parsed.y > 10 ? "Bust!" : "")
                     }
                 }
             },

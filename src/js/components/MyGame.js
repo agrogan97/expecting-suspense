@@ -5,6 +5,7 @@ class MyGame extends Game {
         this.trialIndex = 0;
         this.queryType = queryType;
         this.data = {};
+        this.threshold = 10;
         // 12 non-surprise rounds, 6 surprise rounds, non-interleaved
         // this.roundTypes = [..._.range(0, 12).map(i => "non"), ..._.range(13, 18).map(i => "surprise")];
         // Utils.getUrlParams()["mode"]
@@ -76,6 +77,7 @@ class MyGame extends Game {
         console.log(`Round type: ${this.roundTypes[this.roundIndex].roundType} -- level ${this.roundTypes[this.roundIndex].suspenseGroup == undefined ? this.roundTypes[this.roundIndex].surpriseGroup : this.roundTypes[this.roundIndex].suspenseGroup }`)
         if (this.roundTypes[this.roundIndex].roundType == "non"){
             content.deck.revealAll();
+            // One of the spins will yield a surprise
         } else if (this.roundTypes[this.roundIndex].roundType == "surprise"){
             console.log(`Surprise: ${this.roundTypes[this.roundIndex].surpriseGroup}`)
             content.deck.hideAll();
@@ -110,8 +112,11 @@ class MyGame extends Game {
             .then(() => {
 
                 // Inform the player they can hold down the spin button to spin the wheel - update instruction text
-                
-                content.wheel.target = (drawnCardPos == 0 ? "blue" : "red");
+                if (this.roundTypes[this.roundIndex].roundType == "surprise"){
+                    content.wheel.target = "grey"
+                } else {
+                    content.wheel.target = (drawnCardPos == 0 ? "blue" : "red");
+                }
                 content.wheel.allowSpin();
                 setTimeout(() => {
                     this.handleSpin();
@@ -126,6 +131,8 @@ class MyGame extends Game {
         let settings = this.data[this.roundIndex];
         // Define the spin function first
         const doSpin = () => {
+            content.wheel.img.setRotate(0);
+            content.wheel.rotationAngle = 0;
             // Hide the suspense query and stop it from listening
             content.suspenseQuery.show = false;
             content.suspenseQuery.listening = false;
@@ -175,7 +182,7 @@ class MyGame extends Game {
 
     endRound(){
         content.instructions.text = `Final score: ${this.data[this.roundIndex].cumulativeScore}`;
-        content.drawCardBtn.text.text = (this.data[this.roundIndex].cumulativeScore > 21 ? "Bust!" : "You Win!");
+        content.drawCardBtn.text.text = (this.data[this.roundIndex].cumulativeScore > this.threshold ? "Bust!" : "You Win!");
         if (this.roundIndex == 18){
             console.log("End game")
         } else {
@@ -231,7 +238,7 @@ class SuspenseQuery extends Primitive {
             let res = undefined;
             let intv = setInterval(() => {
                 res = this.keyListen();
-                if (res != undefined) {console.log(`Answered: ${res}`)}
+                if (res != undefined) {}
                 if (res != undefined) {
                     clearInterval(intv);
                     resolve(res);

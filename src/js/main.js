@@ -19,7 +19,7 @@ function handleClick(e){
 function preload(){
     assets.imgs['card'] = loadImage('static/imgs/card_15p.png');
     assets.imgs['card_blue'] = loadImage('static/imgs/card_blue_15p.png')
-    assets.imgs['wheel'] = loadImage('static/imgs/wheel_200p.png');
+    assets.imgs['wheel'] = loadImage('static/imgs/wheel_surprise_200.png');
     assets.jsons["bottom10"] = loadJSON('static/json/bottom10.json');
     assets.jsons["top5"] = loadJSON('static/json/top5.json')
     
