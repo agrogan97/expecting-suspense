@@ -63,22 +63,24 @@ class Wheel extends Primitive {
 
         let current = this.computeCurrentWheelValue(undefined, true);
         let targetSegment;
-        let segDiff;
+        // let segDiff;
 
         if (to == "grey"){
             // Calculate the number of segments between one of the 2 grey cards at random - to avoid patterns
             targetSegment = _.sample([0, 1]);
-            segDiff = targetSegment - current;
-            if (segDiff < 0){segDiff = 8 + segDiff};
         } else if (to == "red"){
             targetSegment = _.sample([3, 5, 7]);
-            segDiff = Math.abs(current - targetSegment);
         } else if (to == "blue"){
             targetSegment = _.sample([2, 4, 6]);
-            segDiff = Math.abs(current - targetSegment);
         } else {
             throw new Error(`Did not recognise target ${to}`)
         }
+
+        let segDiff = targetSegment - current;
+        // console.log(`Target segment: ${targetSegment} -- Current segment: ${current} -- Diff: ${segDiff}`);
+        if (segDiff < 0){segDiff = 8 + segDiff};
+
+        // console.log(`SegDiff applied: ${segDiff}`)
         
         let diff = 0;
         this.spinVals_same.forEach((i, ix) => {
@@ -173,6 +175,7 @@ class Wheel extends Primitive {
     }
 
     draw(){
+        this.img.setRotate(this.rotationAngle)
         // angleMode(DEGREES)
         if (this.spinningAllowed){
             if (keyIsDown(this.key)){

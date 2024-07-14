@@ -1,7 +1,7 @@
 const ctx = document.getElementById("myChart");
 
 const data = {
-    labels : [0], // x-axis
+    labels : [0, 1, 2, 3, 4, 5], // x-axis
     datasets: [
         {
             label: 'Score',
@@ -106,11 +106,19 @@ var scoreChart = new Chart(ctx, {
                     },
                 },
                 ticks: {
+                    display: true,
                     color: "#000",
+                    stepSize: 1,
                     font: {
                         size: 16,
-                    }
-                }
+                    },
+                    min: 0,
+                    max: 5,
+                },
+                beginAtZero: true,
+                // grace: '5%',
+                min: 0,
+                max: 5
             },
             y: {
                 display: true,
@@ -182,6 +190,6 @@ function addChartData(val, label){
 function resetChart(){
     scoreChart.data.datasets[0].data = [0];
     scoreChart.data.datasets[1].data = [0];
-    scoreChart.data.labels = [0];
+    scoreChart.data.labels = [0, 1, 2, 3, 4, 5];
     scoreChart.update();
 }

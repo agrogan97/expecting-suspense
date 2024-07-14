@@ -16,49 +16,13 @@ class MyGame extends Game {
             Otherwise, we sample from a suspense distribution - which one? Need to check
         */
         this.spinIndices = _.range(0, 120).map(i => (0));
-        // If surprise mdoe, we'll predefine when the surprise draws will be
-        if (this.queryType == "surprise"){
-            let counter = 0;
-            let isSurprise = true; // Since it will flip to false on 0
-            _.range(0, 120).forEach(i => {
-                if (i % 20 == 0){
-                    isSurprise = !isSurprise;
-                    console.log(isSurprise)
-                }
-                if (isSurprise){
-                    // This is where we allocate the surprise rounds
-                    // 2 at the start and 2 at the end?
-                    // Here we have 20 indices (4 rounds of 5 spins, and we set in advance which will be surprise rounds)
-                    let flipSet = [0, 1, 5, 6, 13, 14, 18, 19]; // Accounting for indexes starting at 0
-                    if (flipSet.includes(i % 20)){
-                        this.spinIndices[i] = 1;
-                    }
-                }
-            })
-        }
-        
-
-        // Players all either see a high, med or low-suspense round
-        // We'll load these into an obj and shuffle them
-        // Get the keys for each and create an object as obj = {id: {deck: [], pairSequence: [], condition: condition}}
-        // And put into an array we can shuffle
-        let allRounds = []
-        let lowSusKeys = Object.keys(assets.jsons.lowSus.deck);
-        lowSusKeys.forEach(k => {
-            allRounds.push({id: k, deck: assets.jsons.lowSus.deck[k], pairSequence: assets.jsons.lowSus.pairSequence[k], condition: "low"})
+        // Choose 30 spins to be surprise spins, denoted by 1 - not including the first 15 spins (inclusive)
+        _.sampleSize(_.range(16, 120), 30).forEach(i => {
+            this.spinIndices[i] = 1;
         })
-        let medSusKeys = Object.keys(assets.jsons.medSus.deck);
-        medSusKeys.forEach(k => {
-            allRounds.push({id: k, deck: assets.jsons.medSus.deck[k], pairSequence: assets.jsons.medSus.pairSequence[k], condition: "med"})
-        })
-        let highSusKeys = Object.keys(assets.jsons.highSus.deck);
-        highSusKeys.forEach(k => {
-            allRounds.push({id: k, deck: assets.jsons.highSus.deck[k], pairSequence: assets.jsons.highSus.pairSequence[k], condition: "high"})
-        })
-        this.allRounds = _.shuffle(allRounds)
 
-        this.numRounds = this.allRounds.length;
-
+        this.suspenseGroup = content.vars.queryType;
+        this.numRounds = 24;
         this.newRound();
     }
 
@@ -66,14 +30,11 @@ class MyGame extends Game {
         // Initialise a new round
         // A round is made up of 5 trials (spins)
         // Set a new deck, reset the round index etc.
-
-        // Get the deck for the current round - the order of these is set in advance in the constructor
-        let deckJson = this.allRounds[this.roundIndex];
-        let deckIndex = deckJson.id;
-
-        console.log(deckJson)
-        console.log(deckIndex)
-
+        let prevRounds = Object.keys(this.data).map(r => (this.data[r].deckIndex));
+        let deckJson = (this.suspenseGroup == 0 ? assets.jsons.bottom10 : assets.jsons.top5);
+        // Filter the json to remove previous rounds
+        let allowedPairs = Object.keys(deckJson.pairSequence).filter(i => (!prevRounds.includes(i)));
+        let deckIndex = _.sample(allowedPairs);
         // Get the surprise/non-surprise spin status for the next 5 spins
         let spinTypes = this.spinIndices.slice(this.roundIndex*5, this.roundIndex*5+5);
 
@@ -86,16 +47,17 @@ class MyGame extends Game {
         this.trialIndex = 0;
         let roundSettings = {
             roundIndex : this.roundIndex,
-            gameMode: content.vars.queryType,
             cumulativeScore: 0,
-            spinTypes: spinTypes, // An array of 0s and 1s indicating if a normal (0) vs. grey (1) card will be drawn
-            surpriseVals : [], // if this is a surprise spin, store here - non-surprise vals are set to {} as default
+            numQueries: 0,
+            // roundType: this.roundTypes[this.roundIndex],
+            spinTypes: [0, 1, 0, 0, 0], // An array of 0s and 1s indicating if a normal (0) vs. grey (1) card will be drawn
+            surpriseVals : [], // if this is a surprise spin, store here - non-surprise vals are set as -1000 as default
             // queryTrials: _.sampleSize([1, 2, 3, 4, 5], _.sample([2, 3])), // ask suspense/surprise after 2/3 trials chosen at random
             queryTrials : [1, 2, 3, 4, 5], // ask suspense/surprise after all trials
             deckIndex : deckIndex,
-            deck: deckJson.deck,
-            draws: deckJson.pairSequence.map(d => d[0]),
-            randDraws : deckJson.pairSequence.map(d => d[1]),
+            deck: _.shuffle([-9, -1, -3, 0, 1, 2, 4, 5, 9]),
+            draws: [2, -3, 4, 0, 3],
+            randDraws : [1, 4, 5, -9, 9],
             trials : {}
         }
 
@@ -105,6 +67,11 @@ class MyGame extends Game {
             // Reset the chart
             resetChart();
             // and add a end of game callback for roundIndex == 18 or whatever
+
+            roundSettings.deck = _.sampleSize(_.range(-9, 10), 9);
+            roundSettings.draws = _.sampleSize(roundSettings.deck, 5);
+            roundSettings.randDraws = _.sampleSize(roundSettings.deck, 5);
+            roundSettings.spinTypes = _.range(0, 5).map(i => (_.sample(0, 1)));
 
             // Reset the button to say 'Draw'
             content.drawCardBtn.text.text = "Draw";
@@ -185,7 +152,6 @@ class MyGame extends Game {
                     let surpriseVal;
                     if (isSurprise){
                         // Sample from the distribution centred on expected value
-                        // Old version that uses a Gaussian
                         // let m = _.mean(this.suspenseDraws);
                         // let s = standardDeviation(this.suspenseDraws);
                         // surpriseVal = Math.round(randomGaussian(m, s));
@@ -194,8 +160,9 @@ class MyGame extends Game {
                         //     std: s,
                         //     x: surpriseVal,
                         // });
-                        surpriseVal = _.sample([this.drawnCard, this.randCard]);
-                        this.data[this.roundIndex].surpriseVals.push(surpriseVal);
+                        // surpriseVal = _.sample([this.drawnCard, this.randCard])
+                        surpriseVal = this.drawnCard;
+                        // surpriseVal = 0;
                         // remove the drawn cards and replace with the surprise card
                         content.deck.drawnCards.forEach(card => card.toggleDisplay());
                         content.deck.drawnGreyCard.hide();
@@ -274,18 +241,6 @@ class MyGame extends Game {
                     }
                 })
         }, 3000)
-        // Do the following in a .then() call
-        // if (this.roundIndex == 18){
-        //     console.log("End game")
-        // } else {
-        //     setTimeout(() => {
-        //         content.instructions.text = "The next round will begin shortly...";
-        //         content.wheel.rotationAngle = 0;
-        //         setTimeout(() => {
-        //             this.newRound();
-        //         }, 1500)
-        //     }, 1500)
-        // }
     }
 
     nextRound(){
@@ -293,7 +248,79 @@ class MyGame extends Game {
     }
 }
 
+// Get common version from Slider.js
+// class Slider extends Primitive {
+//     constructor(x, y, w, h, kwargs={}){
+//         super(x, y, kwargs);
+//         this.dims = createVector(w, h);
+//         this.initPos = createVector(x, y);
+//         this.slideValue = 0;
+//         this.bounds = [this.pos.x, this.pos.x+w];
+//         this.node = new pRectangle(x, y, 1, 10, {backgroundColor: "black"});
+//         this.submitted = false;
+//         this.node.toggleDragable();
+//         this.node.onDrag = () => {
+//             const convertTo = (params.positionMode == "PERCENTAGE" ? "PIXELS" : "IGNORE");
+//             const C = Primitive._convertCoordinates(createVector(mouseX, mouseY), convertTo);
+//             if (_.inRange(C.x, this.bounds[0], this.bounds[1])){
+//                 this.node.pos.x = C.x;
+//                 // Compute a value based on position
+//                 // NB: this will be in range [0, 1)
+//                 this.slideValue = (this.node.pos.x - this.initPos.x)/((this.pos.x + this.dims.x) - this.initPos.x)
+//             }
+//         }
 
+//         // Also have a submit button once they've selected their score
+//         this.submitBtn = new pButton(x+w/2, y+20, w*0.4, 10).addText(`Submit`);
+//         this.submitBtn.onClick = () => {
+//             this.submitted = true;
+//         }
+
+//         // And a text label
+//         this.queryType = content.vars.queryType;
+
+//         this.textObj = new pText(
+//             // `Please rate your current feelings of ${this.queryType}\n using the keyboard keys 1-5.\n 1 = no ${this.queryType}, 5 = highest ${this.queryType}.`, 
+//             `Please rate your current feelings of ${this.queryType}\n using the slider below.`,
+//             this.pos.x+this.dims.x/2, this.pos.y-25, 
+//             {textSize: this.textSize});
+
+//         this.show = true;
+//     }
+
+//     listen(){
+//         return new Promise((resolve, reject) => {
+//             let intv = setInterval(() => {
+//                 if (this.submitted == true){
+//                     clearInterval(intv);
+//                     this.submitted = false;
+//                     resolve(this.slideValue);
+//                     // Reset the slider to remove anchoring on the next round
+//                     this.slideValue = 0;
+//                     this.node.pos.x = this.initPos.x;
+//                 }
+//             }, 50)
+//         })
+//     }
+
+//     draw(){
+//         if (!this.show){return}
+//         let p = super.draw();
+//         let dims = Primitive._convertCoordinates(this.dims, this.constants.positionMode);
+//         push();
+//         translate(p.x, p.y);
+//         // Draw a line
+//         strokeWeight(5)
+//         line(0, 0, dims.x, 0);
+        
+//         pop();
+
+//         this.node.draw();
+//         this.submitBtn.draw();
+//         this.textObj.draw();
+
+//     }
+// }
 
 class SuspenseQuery extends Primitive {
     // DEPRECATED replaced with the slider
