@@ -30,11 +30,7 @@ function preload(){
     assets.imgs['wheel'] = loadImage('static/imgs/wheel_updated_200.png');
     assets.jsons['bottom10'] = loadJSON('static/json/bottom10.json');
     assets.jsons["top5"] = loadJSON('static/json/top5.json')
-
-    // Load in 3 jsons with our low suspense, medium suspense, and high suspense rounds
-    assets.jsons["lowSus"] = loadJSON('static/json/lowSus.json');
-    assets.jsons["medSus"] = loadJSON('static/json/medSus.json');
-    assets.jsons["highSus"] = loadJSON('static/json/highSus.json');
+    
 }
 
 function setup(){
@@ -44,8 +40,8 @@ function setup(){
     frameRate(60)
     canvas.parent("gameCanvas");
     content.vars = {};
-    content.vars.queryType = _.sample(["suspense", "surprise"]); // But actually from either URL params or jatos params
-    content.vars.queryType = "suspense";
+    content.vars.queryType = _.sample(["suspense", "surprise"])
+    content.vars.queryType = "surprise"
     
 
     document.getElementById("gameCanvas").addEventListener("click", (e) => {
@@ -63,7 +59,7 @@ function setup(){
     } else if (_.inRange(window.innerWidth, 2000, 2300)) {
         textSize = 30;
     } else {
-        textSize = 40;
+        textSize = 34;
     }
 
     psychex.aesthetics.pText.edit({textSize: textSize, stokeWeight: 0.4})
@@ -73,7 +69,7 @@ function setup(){
     content.wheel = new Wheel(50, 55, assets.imgs.wheel);
 
     content.instructions = new pText(`Draw a card!`, 80, 20, {});
-    content.drawCardBtn = new pButton(80, 45, 7.5, 12.5, {backgroundColor: "white", borderWidth: 5}).addText("Draw", {color: "black"});
+    content.drawCardBtn = new pButton(80, 40, 7.5, 12.5, {backgroundColor: "white", borderWidth: 5}).addText("Draw", {color: "black"});
     content.suspenseQuery = new SuspenseQuery(80, 5, content.vars.queryType, {color: 'black', lineSpacing: 8});
 
     myGame = new MyGame();
@@ -90,6 +86,12 @@ function setup(){
 
     content.satisfaction = new SatisfactionQuery(37.5, 40);
     content.satisfaction.slider.textObj.text = `Please rate your level of satisfaction in the previous round \n using the slider below.`
+
+    // Register keypress to skip
+    psychex.keyPressEvents.register('s', () => {
+        // go to main game
+        window.location.replace(`index.html`);
+    })
 }
 
 function windowResized() {
@@ -110,8 +112,8 @@ function draw(){
         content.slider.draw();
         if (!content.drawCardBtn.hide){
             content.drawCardBtn.draw();
-            pText.draw_(`Round ${myGame.roundIndex+1}/24`, 80, 65, {textSize: textSize});
-            pText.draw_(`Drawn ${myGame.trialIndex}/5 cards`, 80, 77.5, {textSize: textSize});
+            pText.draw_(`Trial Mode - Press 's' on your\nkeyboard to start the real game when you're ready.`, 80, 60, {textSize: textSize, lineSpacing: 6});
+            pText.draw_(`Drawn ${myGame.trialIndex}/5 cards`, 80, 80, {textSize: textSize});
         }
     }
 

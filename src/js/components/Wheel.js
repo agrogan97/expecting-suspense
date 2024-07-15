@@ -3,7 +3,7 @@ class Wheel extends Primitive {
         super(x, y, kwargs)
 
         // Params to control the spin animations
-        this.rotationAngle = 7;
+        this.rotationAngle = 0;
         this.initialRotation = 0;
         this.isSpinning = false;
         this.ticker = 0;
@@ -34,7 +34,7 @@ class Wheel extends Primitive {
         this.spinningAllowed = false;
         this.expectingSpin = false;
         // Pre-generate the fixed spin values - the changes in rotation after the player releases the 'spin' key
-        this.generateSpinValues();
+        // this.generateSpinValues("red");
         // Set the key index of the key to be pressed to spin the wheel
         // See https://www.toptal.com/developers/keycode for keycodes
         this.key = 32; // space bar
@@ -42,33 +42,57 @@ class Wheel extends Primitive {
     }
 
 
-    generateSpinValues(){
+    generateSpinValues(to){
+        // Same and opposite refers to colours - this shifts the end result by a segment, which is 45 degs
         this.spinVals_same = [];
         this.spinVals_opposite = [];
+        this.spinVals_grey = [];
+        this.spinVals = [];
         let baseSpeed = 10;
 
         const getRate = (t) => {return baseSpeed - 0.9*baseSpeed*Math.exp((0.008104*t/2 - 1));} // 0.008104 is a specific value to control the final value to a minimal degree of error 
 
-        // This equation takes 278 ticks to get to zero - and rotates through 1094 degrees
+        // This equation takes 278 ticks to get to zero - and rotates through 1094 degrees, exactly 14 full rotations
         _.range(0, 278).forEach(i => {
             this.spinVals_same.push(getRate(i));
-            this.spinVals_opposite.push(getRate(i))
+            // this.spinVals_opposite.push(getRate(i));
+            // this.spinVals_grey.push(getRate(i));
+            this.spinVals.push(getRate(i));
+            
         })
 
-        // Change the first N values in the other array to be the basespeed, so that it always lands on the opposite colour segment
+        let current = this.computeCurrentWheelValue(undefined, true);
+        let targetSegment;
+        // let segDiff;
+
+        if (to == "grey"){
+            // Calculate the number of segments between one of the 2 grey cards at random - to avoid patterns
+            targetSegment = _.sample([0, 1]);
+        } else if (to == "red"){
+            targetSegment = _.sample([3, 5, 7]);
+        } else if (to == "blue"){
+            targetSegment = _.sample([2, 4, 6]);
+        } else {
+            throw new Error(`Did not recognise target ${to}`)
+        }
+
+        let segDiff = targetSegment - current;
+        // console.log(`Target segment: ${targetSegment} -- Current segment: ${current} -- Diff: ${segDiff}`);
+        if (segDiff < 0){segDiff = 8 + segDiff};
+
+        // console.log(`SegDiff applied: ${segDiff}`)
+        
         let diff = 0;
         this.spinVals_same.forEach((i, ix) => {
-            if (diff <= 45){
+            if (diff <= (45*segDiff)){
                 let tmp = 10 - i;
-                this.spinVals_opposite[ix] = 10;
+                this.spinVals[ix] = 10;
                 diff += tmp;
             }
-          }) 
-
-        // let val = baseSpeed - baseSpeed*(Math.exp((3*t - numTicks*0.3)/numTicks*0.3)-1);
+        })
     }
 
-    computeCurrentWheelValue(val = undefined){
+    computeCurrentWheelValue(val = undefined, asSegmentNumber=false){
         // Based on the number of segments and the rotational value, work out the current colour that the arrow is pointing at
 
         // Get modulus of angle
@@ -83,11 +107,13 @@ class Wheel extends Primitive {
         let anglePerSegment = 360 / 8; // 8 segments
         // Get the segment index from current angle divided by anglePerSegment
         let segmentNum = Math.floor(modRot / anglePerSegment); // Indexing from 0 -> 7
-        let isEven = ((segmentNum % 2) == 0);
-        if (isEven === true){
-            return 'blue'
-        } else {
-            return 'red'
+        // Check if segment num will land in grey -> the 0th and 1st segments
+        if (segmentNum == 0 || segmentNum == 1){
+            return asSegmentNumber ? segmentNum : 'grey';
+        } else if (segmentNum == 2 || segmentNum == 4 || segmentNum == 6){
+            return asSegmentNumber ? segmentNum : 'blue';
+        } else if (segmentNum == 3 || segmentNum == 5 || segmentNum == 7){
+            return asSegmentNumber ? segmentNum : 'red';
         }
     }
 
@@ -100,13 +126,9 @@ class Wheel extends Primitive {
         } else if (!buttonHeldDown) {
             if (tick == 0){
                 let current = this.computeCurrentWheelValue()
-                let projected = this.computeCurrentWheelValue(this.rotationAngle + _.sum(this.spinVals))
-                // Determine which array of damping values to use based on desired value
-                if (current == this.target){
-                    this.useVals = this.spinVals_same
-                } else {
-                    this.useVals = this.spinVals_opposite
-                }
+                // if the target is a grey card - as in a surprise round - make sure we hit either the 0th or 1st segment
+                this.generateSpinValues(this.target);
+                this.useVals = this.spinVals
 
             }
             // Once released, use the pre-calculated damping values
@@ -153,6 +175,7 @@ class Wheel extends Primitive {
     }
 
     draw(){
+        this.img.setRotate(this.rotationAngle)
         // angleMode(DEGREES)
         if (this.spinningAllowed){
             if (keyIsDown(this.key)){
