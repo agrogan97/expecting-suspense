@@ -45,7 +45,7 @@ function setup(){
     canvas.parent("gameCanvas");
     content.vars = {};
     content.vars.queryType = _.sample(["suspense", "surprise"]); // But actually from either URL params or jatos params
-    content.vars.queryType = "surprise";
+    content.vars.queryType = "suspense";
     
 
     document.getElementById("gameCanvas").addEventListener("click", (e) => {
