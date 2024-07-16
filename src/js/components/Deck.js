@@ -21,10 +21,10 @@ class Card extends Primitive {
         } else if (_.inRange(window.innerWidth, 2000, 2300)) {
             this.scale = 0.5;
         } else {
-            this.scaler = 0.55;
+            this.scale = 0.55;
         }
         this.scaleFactor = 0.45;
-        this.img = new pImage(x, y, assets.imgs.card, {...kwargs, imageMode: "CORNER"}).setScale(this.scaleFactor);
+        this.img = new pImage(x, y, assets.imgs.card_blank, {...kwargs, imageMode: "CORNER"}).setScale(this.scale);
         // Store the scaled dims
         // this.dims = createVector(this.img.dims.x*this.scaleFactor, this.img.dims.y*this.scaleFactor);
         this.dims = this.img.dims;
@@ -105,7 +105,7 @@ class Deck extends Primitive {
         // this.initPos = createVector(x, y)
         this.nCards = cardVals.length;
         this.cardVals = cardVals;
-        const offset = Primitive.toPercentage(createVector(assets.imgs.card.width, assets.imgs.card.height))
+        const offset = Primitive.toPercentage(createVector(assets.imgs.card_blank.width, assets.imgs.card_blank.height))
         this.xOffset = offset.x*0.65;
         this.yOffset = offset.y*0.55;
         this.animationLength = 1.5;
@@ -115,6 +115,7 @@ class Deck extends Primitive {
         this.nRows = Math.ceil(this.nCards/this.nCols);
 
         this.cardImgDims = new Card(0, 0, -1, -1000, {}).dims;
+        this.scale = new Card(0, 0, -1, -1000).scale;
 
         // place cards
         this.cards= [];
@@ -124,8 +125,8 @@ class Deck extends Primitive {
                 if (rowIx*this.nRows + colIx < this.nCards) {
                     this.cards.push(
                         new Card(
-                            this.pos.x + 3.7*1.5*colIx, // x-pos
-                            this.pos.y + this.yOffset*rowIx, // y-pos
+                            this.pos.x + offset.x*colIx*this.scale*1.2, // starting position, shifted by the scaled card size, plus a buffer of 1.2
+                            this.pos.y + offset.y*rowIx*this.scale*1.2, // y-pos
                             rowIx*this.nRows + colIx, // id
                             // rowIx*this.nRows + colIx, // value
                             this.cardVals[rowIx*this.nRows + colIx]
@@ -143,12 +144,21 @@ class Deck extends Primitive {
         let singleCardDims = this.cards[0].dims;
 
         // Create 2 placeholder cards that represent 'drawn' cards
+
         this.drawnCards = [
-            new Card(this.pos.x + 4*singleCardDims.x*1.1, this.pos.y + 0.35*singleCardDims.y, 'drawn1'),
-            new Card(this.pos.x + 4*singleCardDims.x*1.1, this.pos.y + 1.75*singleCardDims.y, 'drawn2')
+            new Card(this.pos.x + offset.x*this.scale*4, this.pos.y + 0.35*singleCardDims.y, 'drawn1'),
+            new Card(this.pos.x + offset.x*this.scale*4, this.pos.y + 1.75*singleCardDims.y, 'drawn2')
         ]
-        this.drawnCards[0].img.img = assets.imgs.card_blue;
-        this.drawnCards.forEach(card => {card.toggleDisplay()})
+
+        this.drawnCards[0].img.img = assets.imgs.card_green;
+        this.drawnCards[1].img.img = assets.imgs.card_yellow;
+        this.drawnCards.forEach(card => {card.toggleDisplay()});
+
+        // Draw a separate grey card
+        this.drawnGreyCard = new Card(this.pos.x + offset.x*this.scale*4, this.pos.y + singleCardDims.y*1.2, 'surprise');
+        this.drawnGreyCard.img.img = assets.imgs.card_grey;
+        this.drawnGreyCard.hide();
+
         this.hideAll();
     }
 
@@ -169,11 +179,13 @@ class Deck extends Primitive {
         pair.forEach((card, ix) => {
             this.drawnCards[ix].setValue(card);
             this.drawnCards[ix].toggleDisplay();
-            // this.drawncards[ix].reveal();
         })
-        // TODO and hide the first 2 in the deck to make it seem like they've been drawn
         this.cards[0].toggleDisplay();
         this.cards[1].toggleDisplay();
+        
+        // We always draw 2 cards from the deck and display the pair, but if it's a surprise round,
+        // after the wheel has been spun we remove them and replace with the single grey card
+        
     }
 
     shuffle(){
@@ -209,7 +221,7 @@ class Deck extends Primitive {
                     }
                     // Draw 2 cards from the deck
                     this.drawFromDeck(pair);
-                    this.drawnCards.forEach(card => {card.reveal()});
+                    this.drawnCards.forEach(card => {card.reveal()})
                     resolve();
                 }, 1000); // this waits 1 second before drawing from the deck
             }
@@ -220,7 +232,7 @@ class Deck extends Primitive {
 
     reset(){
         this.drawnCards.forEach(card => card.show = false)
-
+        this.drawnGreyCard.show = false;
         this.cards.forEach((card, ix) => {
             card.show = true;
             card.setValue(this.cardVals[ix]);
@@ -238,6 +250,10 @@ class Deck extends Primitive {
         this.cards.forEach(card => {
             card.hide()
         })
+        this.drawnCards.forEach(card => {
+            card.show = false;
+        })
+        this.drawnGreyCard.show = false;
     }
 
     revealAll(){
@@ -250,6 +266,7 @@ class Deck extends Primitive {
         push();
         this.cards.forEach((card) => {card.draw()})
         this.drawnCards.forEach((card) => {card.draw()})
+        this.drawnGreyCard.draw();
         pop();
     }
 

@@ -1,7 +1,7 @@
 const ctx = document.getElementById("myChart");
 
 const data = {
-    labels : [0], // x-axis
+    labels : [0, 1, 2, 3, 4, 5], // x-axis
     datasets: [
         {
             label: 'Score',
@@ -40,10 +40,10 @@ const test_bg_area = {
         } = chart;
 
         ctx.fillStyle = 'rgba(255, 0, 0, 0.54)'; // red
-        ctx.fillRect(left+1, y.getPixelForValue(21), width-0.5, top - y.getPixelForValue(21)) // left, top, width, height
+        ctx.fillRect(left+1, y.getPixelForValue(10), width-0.5, top - y.getPixelForValue(10)) // left, top, width, height
 
         ctx.fillStyle = 'rgba(0, 31, 142, 0.47)'; // blue
-        ctx.fillRect(left, top - (top - y.getPixelForValue(21)), width, y.getPixelForValue(y.min) - y.getPixelForValue(21)) // left, top, width, height
+        ctx.fillRect(left, top - (top - y.getPixelForValue(10)), width, y.getPixelForValue(y.min) - y.getPixelForValue(10)) // left, top, width, height
     }
 }
 
@@ -82,7 +82,7 @@ var scoreChart = new Chart(ctx, {
                         return "Player Score"
                     },
                     footer: (tooltipContext) => {
-                        return (tooltipContext[0].parsed.y > 21 ? "Bust!" : "")
+                        return (tooltipContext[0].parsed.y > 10 ? "Bust!" : "")
                     }
                 }
             },
@@ -106,11 +106,19 @@ var scoreChart = new Chart(ctx, {
                     },
                 },
                 ticks: {
+                    display: true,
                     color: "#000",
+                    stepSize: 1,
                     font: {
                         size: 16,
-                    }
-                }
+                    },
+                    min: 0,
+                    max: 5,
+                },
+                beginAtZero: true,
+                // grace: '5%',
+                min: 0,
+                max: 5
             },
             y: {
                 display: true,
@@ -182,6 +190,6 @@ function addChartData(val, label){
 function resetChart(){
     scoreChart.data.datasets[0].data = [0];
     scoreChart.data.datasets[1].data = [0];
-    scoreChart.data.labels = [0];
+    scoreChart.data.labels = [0, 1, 2, 3, 4, 5];
     scoreChart.update();
 }
